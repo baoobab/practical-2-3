@@ -1,6 +1,7 @@
 ﻿#include <iostream>
 #include <string>
 #include <map>
+#include <algorithm>
 using namespace std;
 
 map<char, int> weight { 
@@ -136,7 +137,7 @@ int calculateInfixOperation(char op, int first, int second) {
   };
 }
 
-string getNumberFromString(string expr, int& pos) {
+string getNumberFromString(string& expr, int& pos) {
   string output = "";
     
   for (pos; pos < expr.length(); pos++) {
@@ -191,7 +192,7 @@ string fromInfixToPostfix(string& infixExpr) {
   return output;
 }
 
-int calculatePostfix(string postfixExpr) {
+int calculatePostfix(string& postfixExpr) {
   Stack* stack = NULL;
   int number = 0;
   bool flag = true;
@@ -220,18 +221,169 @@ int calculatePostfix(string postfixExpr) {
   return peek(stack)->data.digit;
 }
 
+int countOperators(const string& expr) {
+  int counter = 0;
+  counter += count(expr.begin(), expr.end(), '+');
+  counter += count(expr.begin(), expr.end(), '-');
+  counter += count(expr.begin(), expr.end(), '*');
+  counter += count(expr.begin(), expr.end(), '/');
+  return counter;
+}
+
+int countNumbers(string& expr) {
+  int counter = 0;
+  for (int i = 0; i < expr.length(); i++) {
+    char c = expr[i];
+    if (isdigit(c)) {
+      string number = getNumberFromString(expr, i);
+      counter++;
+    }
+  }
+  return counter;
+}
+
+bool checkExpr(string& expr) {
+  if (expr.empty()) return false;
+  if (count(expr.begin(), expr.end(), '(') != count(expr.begin(), expr.end(), ')')) {
+    return false;
+  }
+  if (countNumbers(expr) - countOperators(expr) != 1) {
+    return false;
+  }
+
+  return true;
+}
 
 int main() {
-  string postfixExpr;
   string infixExpr;
+  string postfixExpr;
+  string prefixExpr;
 
-  cout << "Write an infix expression: " << "\n";
-  getline(cin, infixExpr);
+  short unsigned choiseType;
+  short int workPoint;
 
-  postfixExpr = fromInfixToPostfix(infixExpr);
-  cout << "Postfix: " << postfixExpr << "\n";
+  while(true) {
+    cout << "\nNavigation\n"
+         << "1) Convert from infix to postfix:\n"
+         << "2) Check expression\n"
+         << "3) Calculate expression\n";
 
-  // getline(cin, postfixExpr);
-  cout << "Result: " << calculatePostfix(postfixExpr);
+    cin.clear(); // Clearing the input stream from possible errors
+    cin.sync();
+
+    cout << "Select point of work (number 1 to 3): ";
+    cin >> workPoint;
+
+    switch (workPoint) {   
+      case 1: {
+        /* todo: variables in expr + prefix */
+        cout << "Write an infix expression:\n";
+        cin.clear();
+        cin.sync();
+        getline(cin, infixExpr);
+        if (!checkExpr(infixExpr)) {
+          cout << "\nInvalid Input";
+          break;
+        }
+        cout << "Postfix: " << fromInfixToPostfix(infixExpr) << "\n";
+
+        break;
+      }
+      case 2: {
+        cout << "\nChoose the expression type:"
+             << "\n 1 - Infix"
+             << "\n 2 - Prefix"
+             << "\n 3 - Postfix\n";
+        cin >> choiseType;
+
+        cout << "Write an expression:\n";
+        cin.clear();
+        cin.sync();
+
+        switch (choiseType) {
+          case 1: {
+            getline(cin, infixExpr);
+            if (!checkExpr(infixExpr)) {
+              cout << "\nInvalid Input";
+              break;
+            }
+            break;
+          }
+          case 2: {
+            getline(cin, prefixExpr);
+            if (!checkExpr(prefixExpr)) {
+              cout << "\nInvalid Input";
+              break;
+            }
+            break;
+          }
+          case 3: {
+            getline(cin, postfixExpr);
+            if (!checkExpr(postfixExpr)) {
+              cout << "\nInvalid Input";
+              break;
+            }
+            break;
+          }
+          default: {
+            cout << "\nYou entered an incorrect value\n";
+            break;
+          }
+        }
+
+        break;
+      }
+      case 3: {
+        cout << "\nChoose the expression type:"
+             << "\n 1 - Infix"
+             << "\n 2 - Prefix"
+             << "\n 3 - Postfix\n";
+        cin >> choiseType;
+
+        cout << "Write an expression:\n";
+        cin.clear();
+        cin.sync();
+
+        switch (choiseType) {
+          case 1: {
+            /* todo: calculate+validate infix */
+            break;
+          }
+          case 2: {
+            /* todo: calculate+validate prefix */
+            break;
+          }
+          case 3: {
+            getline(cin, postfixExpr);
+            if (!checkExpr(postfixExpr)) {
+              cout << "\nInvalid Input";
+              break;
+            }
+            cout << "\nResult: " << calculatePostfix(postfixExpr);
+            break;
+          }
+          default: {
+            cout << "\nYou entered an incorrect value\n";
+            break;
+          }
+        }
+
+        break;
+      }
+      default: {
+        cout << "\n" << "You did not enter a number in the range from 1 to 3";
+        break;
+      }
+    }
+    cin.clear(); // Clearing the input stream from possible errors
+    cin.sync();
+
+    char stopFlag;
+    cout << "\n" << "Continue the program? (Y/N) ";
+    cin >> stopFlag;
+        
+    if (stopFlag != 'Y' && stopFlag != 'y') break;
+  }
+
   return 0;
 }
