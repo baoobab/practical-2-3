@@ -163,30 +163,47 @@ string fromInfixToPostfix(string& infixExpr) {
       string number = getNumberFromString(infixExpr, i);
       output += number;
       output += ' ';
+      cout << "\nFound number " << number << ", add it to the output line\n";
     } else if (c == '+' || c == '-' || c == '*' || c == '/') {
-      if ( length(opStack) == 0 || (weight[peek(opStack)->data.letter] < weight[c]) ) addLetter(opStack, c);
+      cout << "\nFound an operation sign " << c << ", checking priority\n";
+      if ( length(opStack) == 0 || (weight[peek(opStack)->data.letter] < weight[c]) ) {
+        addLetter(opStack, c);
+        cout << "\nCool cla$$, operation priority " << c << " > priority of top of the stack (or empty), add it to the operations stack\n";
+      }
       else {
+        cout << "\nThat's a do$ada, the priority of the operation " << c << " <= priority of top of the stack, pull out all operations to the lowest priority\n";
         while ( (peek(opStack) != NULL ? weight[peek(opStack)->data.letter] : -1) >= weight[c] ) {
           output += peek(opStack)->data.letter;
           output += ' ';
+          cout << "\nAdded an operation sign from the stack " << peek(opStack)->data.letter << " to the output line\n";
           pop(opStack);
         }
-        if ( length(opStack) == 0 || (weight[peek(opStack)->data.letter] < weight[c]) ) addLetter(opStack, c);
+        cout << "\nAnd consolidate success: priority " << c << " > priority of top of the stack (or empty), add it to the operations stack\n";
+        if ( length(opStack) == 0 || (weight[peek(opStack)->data.letter] < weight[c]) ) {
+          addLetter(opStack, c);
+          cout << "\nAdded an operation sign " << c << " to the operations stack\n";
+        }
       }
     } else if (c == '(') {
       addLetter(opStack, c);
+      cout << "\nAdd open bracket to the operation stack\n";
     } else if (c == ')') {
+      cout << "\nFound closed bracket, pull out all the operation signs from stack, until open bracket:\n";
       while ( peek(opStack) != NULL && peek(opStack)->data.letter != '(' ) {
         output += peek(opStack)->data.letter;
         output += ' ';
+        cout << "\nAdded an operation sign from the stack " << peek(opStack)->data.letter << " to the output line\n";
         pop(opStack);
       }  
-      pop(opStack); // убираем саму скобку (
+      cout << "\nRemove open bracket from the operation stack\n";
+      pop(opStack);
     }
   }
-  while (length(opStack) > 0) { // закидываем оставшиеся символы из стека, после парсинга входной строки
+  cout << "\nThe input line has ended, we throw all the remaining operation signs from the stack into the output line\n";
+  while (length(opStack) > 0) {
     output += peek(opStack)->data.letter;
     output += ' ';
+    cout << "\nAdded an operation sign from the stack " << peek(opStack)->data.letter << " to the output line\n";
     pop(opStack);
   }
   return output;
@@ -255,6 +272,8 @@ bool checkExpr(string& expr) {
 }
 
 int main() {
+  setlocale(LC_ALL, "Russian");
+
   string infixExpr;
   string postfixExpr;
   string prefixExpr;
@@ -285,7 +304,8 @@ int main() {
           cout << "\nInvalid Input";
           break;
         }
-        cout << "Postfix: " << fromInfixToPostfix(infixExpr) << "\n";
+        postfixExpr = fromInfixToPostfix(infixExpr);
+        cout << "\nPostfix: " << postfixExpr << "\n";
 
         break;
       }
