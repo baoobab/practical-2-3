@@ -1,6 +1,16 @@
 ﻿#include <iostream>
+#include <string>
+#include <map>
 using namespace std;
 
+map<char, int> weight { 
+    {'+', 2 },
+    {'-', 2 },
+    {'*', 3 },
+    {'/', 3 },
+    {'(', 0 },
+    {')', 1 }
+};
 
 struct Stack {
   union {
@@ -111,19 +121,117 @@ void printStack(Stack* beg, bool isDigit) {
 }
 
 
-int main() {
-  Stack* stack = NULL;
-  cin.clear(); // Clearing the input stream from possible errors
-  cin.sync();
+int calculateInfixOperation(char op, int first, int second) {
+  switch (op) {
+    case '+':
+      return first + second;
+    case '-':
+      return first - second;
+    case '*':
+      return first * second;
+    case '/':
+      return first / second;
+    default:
+      return 0;
+  };
+}
 
-  int value;
-  while (cin >> value) addDigit(stack, value);
-
-
-  while (!isEmpty(stack)) {
-    printStack(stack, true);
-    pop(stack);
+string getNumberFromString(string expr, int& pos) {
+  string output = "";
+    
+  for (pos; pos < expr.length(); pos++) {
+    char c = expr[pos];
+    
+    if (isdigit(c)) output += c;
+    else {
+      pos--;
+      break;
+    }
   }
+  return output;
+}
 
+string fromInfixToPostfix(string& infixExpr) {
+  string output;
+  Stack* opStack = NULL; // стек операций
+
+  for (int i = 0; i < infixExpr.length(); i++) {
+    char c = infixExpr[i];
+
+    if (isdigit(c)) {
+      string number = getNumberFromString(infixExpr, i);
+      output += number;
+      output += ' ';
+    } else if (c == '+' || c == '-' || c == '*' || c == '/') {
+      if ( length(opStack) == 0 || (weight[peek(opStack)->data.letter] < weight[c]) ) addLetter(opStack, c);
+      else {
+        while ( (peek(opStack) != NULL ? weight[peek(opStack)->data.letter] : -1) >= weight[c] ) {
+          output += peek(opStack)->data.letter;
+          output += ' ';
+          pop(opStack);
+        }
+        if ( length(opStack) == 0 || (weight[peek(opStack)->data.letter] < weight[c]) ) addLetter(opStack, c);
+      }
+    } else if (c == '(') {
+      addLetter(opStack, c);
+    } else if (c == ')') {
+      while ( peek(opStack) != NULL && peek(opStack)->data.letter != '(' ) {
+        output += peek(opStack)->data.letter;
+        output += ' ';
+        pop(opStack);
+      }  
+      pop(opStack); // убираем саму скобку (
+    }
+  }
+  while (length(opStack) > 0) { // закидываем оставшиеся символы из стека, после парсинга входной строки
+    output += peek(opStack)->data.letter;
+    output += ' ';
+    pop(opStack);
+  }
+  return output;
+}
+
+int calculatePostfix(string postfixExpr) {
+  Stack* stack = NULL;
+  int number = 0;
+  bool flag = true;
+
+  for (int i = 0; i < postfixExpr.length(); i++) {
+    char c = postfixExpr[i];
+    if (isdigit(c)) {
+      number *= 10;
+      number += (c - '0');
+      flag = true;
+    } else {
+      if (c != ' ') {
+        int num2 = peek(stack)->data.digit;
+        pop(stack);
+        int num1 = peek(stack)->data.digit;
+        pop(stack);
+
+        addDigit(stack, calculateInfixOperation(c, num1, num2));
+        flag = false;
+      } else if (c == ' ' && flag) {
+        addDigit(stack, number);
+        number = 0;
+      }
+    }
+  }
+  return peek(stack)->data.digit;
+}
+
+
+int main() {
+  string postfixExpr;
+  string infixExpr;
+
+  cout << "Write an infix expression: " << "\n";
+  getline(cin, infixExpr);
+
+  postfixExpr = fromInfixToPostfix(infixExpr);
+  cout << "Postfix: " << postfixExpr << "\n";
+
+  // getline(cin, postfixExpr);
+  cout << "Result: " << calculatePostfix(postfixExpr);
   return 0;
 }
