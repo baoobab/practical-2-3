@@ -1,50 +1,49 @@
 ﻿#include <iostream>
 using namespace std;
 
-struct Stack
-{
-    int data;
-    Stack* tail;
 
-
-  unsigned getStackLength() {
-    Stack* curr = this;
-    unsigned length = 0;
-    while (curr) {
-      ++length;
-      curr = curr->tail;
-    }
-    return length;
-  }
-
-  bool isEmpty() {
-    if (this ==  NULL || getStackLength() == 0) return true;
-    return false;
-  }
-
-  Stack* findItemByIndex(unsigned idx) {
-    Stack* curr = this;
-    int counter = 0;
-    
-    while (curr) {
-      if (counter == idx) return curr;
-      curr = curr->tail;
-      counter++;
-    }
-    return NULL;
-  }
-
-  Stack* top() { 
-    Stack* curr = this;
-    while (curr->tail) curr = curr->tail;
-    return curr;
-  }
+struct Stack {
+  union {
+    int digit;
+    char letter;
+  } data;
+  Stack* tail;
 };
 
+unsigned length(Stack* beg) {
+  unsigned length = 0;
+  while (beg) {
+    ++length;
+    beg = beg->tail;
+  }
+  return length;
+}
 
-void del(Stack* &beg) {
+bool isEmpty(Stack* beg) {
+  if (beg ==  NULL || length(beg) == 0) return true;
+  return false;
+}
+
+Stack* findItemByIndex(Stack* beg, unsigned idx) {
+  int counter = 0;
+      
+  while (beg) {
+    if (counter == idx) return beg;
+    beg = beg->tail;
+    counter++;
+  }
+  return NULL;
+}
+
+Stack* peek(Stack* beg) { 
+  if (beg == NULL) return NULL;
+  while (beg->tail) beg = beg->tail;
+  return beg;
+}
+
+void pop(Stack* &beg) {
   Stack* item = NULL;
-  int index = beg->getStackLength() - 1;
+  int index = length(beg) - 1;
 
   if (index < 0) return;
   if ( !index ) {
@@ -54,16 +53,14 @@ void del(Stack* &beg) {
     return;
   }
 
-  item = beg->findItemByIndex(index - 1);
+  item = findItemByIndex(beg, index - 1);
   Stack* dItem = item->tail;
   item->tail = dItem->tail;
   delete dItem;
 }
 
-Stack* add(Stack* &beg, int data) {
+Stack* addNode(Stack* &beg) {
   Stack* item = new Stack;
-
-  item->data = data;
   item->tail = NULL;
 
   if (beg == NULL) {
@@ -71,7 +68,7 @@ Stack* add(Stack* &beg, int data) {
     return item;
   }
 
-  int index = beg->getStackLength();
+  int index = length(beg);
   Stack* prevItem = beg;
   --index;
 
@@ -83,24 +80,35 @@ Stack* add(Stack* &beg, int data) {
   return item;
 }
 
-void printNode(Stack* curr) {
+Stack* addDigit(Stack* &beg, int data) {
+  Stack* item = addNode(beg);
+  if (item) item->data.digit = data;
+  return item;
+}
+
+Stack* addLetter(Stack* &beg, int data) {
+  Stack* item = addNode(beg);
+  if (item) item->data.letter = data;
+  return item;
+}
+
+void printNode(Stack* curr, bool isDigit) {
   cout << "\nItem\n"
-  << " Data: " << curr->data << "\n"
+  << " Data: " << (isDigit ? curr->data.digit : curr->data.letter) << "\n"
   << " Tail: " << curr->tail << "\n"
   << " Addr: " << curr << "\n";
 }
 
-void printStack(Stack* beg) {
+void printStack(Stack* beg, bool isDigit) {
   if (!beg) {
     cout << "\nThe stack is empty(((\n";
     return;
   }
   while (beg) {
-    printNode(beg);
+    printNode(beg, isDigit);
     beg = beg->tail;
   }
 }
-
 
 
 int main() {
@@ -109,12 +117,12 @@ int main() {
   cin.sync();
 
   int value;
-  while (cin >> value) add(stack, value);
+  while (cin >> value) addDigit(stack, value);
 
 
-  while (!stack->isEmpty()) {
-    printStack(stack);
-    del(stack);
+  while (!isEmpty(stack)) {
+    printStack(stack, true);
+    pop(stack);
   }
 
   return 0;
