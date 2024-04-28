@@ -13,6 +13,15 @@ map<char, int> weight {
     {')', 1 }
 };
 
+map<char, int> weightReversed { 
+    {'+', 4 },
+    {'-', 3 },
+    {'*', 2 },
+    {'/', 2 },
+    {'(', 0 },
+    {')', 1 }
+};
+
 struct Stack {
   union {
     int digit;
@@ -152,7 +161,31 @@ string getNumberFromString(string& expr, int& pos) {
   return output;
 }
 
+void reverseString(string& inp) {
+  string output = "";
+  for (int i = inp.length() - 1; i >= 0; i--) output += inp[i];
+  inp = output;
+}
+
+string getNumberFromReverseString(string& expr, int& pos) {
+  string output = "";
+    
+  for (pos; pos >= 0; pos--) {
+    char c = expr[pos];
+    
+    if (isdigit(c)) output += c;
+    else {
+      pos++;
+      break;
+    }
+  }
+  reverseString(output);
+  return output;
+}
+
+
 string fromInfixToPostfix(string& infixExpr) {
+  if (infixExpr.length() == 0) return "";
   string output;
   Stack* opStack = NULL; // стек операций
 
@@ -209,7 +242,59 @@ string fromInfixToPostfix(string& infixExpr) {
   return output;
 }
 
+string fromInfixToPrefix(string& infixExpr) {
+  if (infixExpr.length() == 0) return "";
+  string output;
+  Stack* opStack = NULL; // стек операций
+
+  for (int i = infixExpr.length() - 1; i >= 0; i--) {
+    char c = infixExpr[i];
+
+    if (isdigit(c)) {
+      string number = getNumberFromReverseString(infixExpr, i);
+      output += number;
+      output += ' ';
+    } else if (c == '+' || c == '-' || c == '*' || c == '/') {
+      while ( (peek(opStack) != NULL ? weightReversed[peek(opStack)->data.letter] : -1) >= weightReversed[c] ) {
+        output += peek(opStack)->data.letter;
+        output += ' ';
+        pop(opStack);
+      }
+      addLetter(opStack, c);
+      // if ( length(opStack) == 0 || (weight[peek(opStack)->data.letter] < weight[c]) ) {
+      //   addLetter(opStack, c);
+      // }
+      // else {
+      //   while ( (peek(opStack) != NULL ? weight[peek(opStack)->data.letter] : -1) >= weight[c] ) {
+      //     output += peek(opStack)->data.letter;
+      //     output += ' ';
+      //     pop(opStack);
+      //   }
+      //   if ( length(opStack) == 0 || (weight[peek(opStack)->data.letter] < weight[c]) ) {
+      //     addLetter(opStack, c);
+      //   }
+      // }
+    } else if (c == '(') {
+      addLetter(opStack, c);
+    } else if (c == ')') {
+      while ( peek(opStack) != NULL && peek(opStack)->data.letter != '(' ) {
+        output += peek(opStack)->data.letter;
+        output += ' ';
+        pop(opStack);
+      } 
+      pop(opStack);
+    }
+  }
+  while (length(opStack) > 0) {
+    output += peek(opStack)->data.letter;
+    output += ' ';
+    pop(opStack);
+  }
+  return output;
+}
+
 int calculatePostfix(string& postfixExpr) {
+  if (postfixExpr.length() == 0) return 0;
   Stack* stack = NULL;
   int number = 0;
   bool flag = true;
@@ -271,6 +356,35 @@ bool checkExpr(string& expr) {
   return true;
 }
 
+bool checkDictIncludes(char letter, map<char, int>& dict) {
+  return bool(dict[letter]);
+}
+
+string cutString(string& inp, unsigned startIdx, unsigned endIdx) {
+  string out;
+  for (int i = 0; i < inp.length(); i++) if (i >= startIdx && i < endIdx) out += inp[i];
+  return out;
+}
+
+string replaceVariablesInString(string& inp, map<char, int>& dict) {
+  string out = inp;
+  string inpBefore;
+  string inpAfter;
+  for (int i = 0; i < inp.length(); i++) {
+    if (checkDictIncludes(inp[i], dict)) {
+      inpBefore = cutString(out, 0, i);
+      inpAfter = cutString(out, i + 1, inp.length());
+      out = inpBefore + to_string(dict[inp[i]]) + inpAfter;
+    }
+  }
+  return out;
+}
+
+void printMap(map<char, int> dict) {
+  for (const auto& [key, value] : dict)
+    cout << key << " " << value << "\n";
+}
+
 int main() {
   setlocale(LC_ALL, "Russian");
 
@@ -278,12 +392,15 @@ int main() {
   string postfixExpr;
   string prefixExpr;
 
+  char actionType;
   short unsigned choiseType;
   short int workPoint;
 
+  map<char, int> variables {};
+
   while(true) {
     cout << "\nNavigation\n"
-         << "1) Convert from infix to postfix:\n"
+         << "1) Convert from infix to postfix and prefix:\n"
          << "2) Check expression\n"
          << "3) Calculate expression\n";
 
@@ -300,12 +417,33 @@ int main() {
         cin.clear();
         cin.sync();
         getline(cin, infixExpr);
+        cout << "Are you used variables in expression? (Y/N): \n";
+        cin >> actionType;
+        switch (actionType) {
+          case 'Y': {
+            string varLine;
+            cout << "Write all variables (new var. = new line, enter <S> to stop it) (example: a=24):\n";
+            cin.clear();
+            cin.sync();
+            while (true) {
+              getline(cin, varLine);
+              if (varLine.length() < 3) break;
+              int num = stoi(cutString(varLine, 2, varLine.length()));
+              variables[varLine[0]] = num;
+            }
+            infixExpr = replaceVariablesInString(infixExpr, variables);
+            break;
+          }
+        }
         if (!checkExpr(infixExpr)) {
           cout << "\nInvalid Input";
           break;
         }
         postfixExpr = fromInfixToPostfix(infixExpr);
         cout << "\nPostfix: " << postfixExpr << "\n";
+        
+        // prefixExpr = fromInfixToPrefix(infixExpr);
+        // cout << "\nPrefix: " << prefixExpr << "\n";
 
         break;
       }
@@ -327,6 +465,7 @@ int main() {
               cout << "\nInvalid Input";
               break;
             }
+            cout << "Cool";
             break;
           }
           case 2: {
@@ -335,6 +474,7 @@ int main() {
               cout << "\nInvalid Input";
               break;
             }
+            cout << "Cool";
             break;
           }
           case 3: {
@@ -343,6 +483,7 @@ int main() {
               cout << "\nInvalid Input";
               break;
             }
+            cout << "Cool";
             break;
           }
           default: {
@@ -360,13 +501,43 @@ int main() {
              << "\n 3 - Postfix\n";
         cin >> choiseType;
 
+        cout << "Do you want to use old expression from memory< or write new? (O/N)\n";
+        cin >> actionType;
+        if (actionType == 'O') {
+          switch (choiseType) {
+            case 1: {
+              postfixExpr = fromInfixToPostfix(infixExpr);
+              cout << "\nResult: " << calculatePostfix(postfixExpr);
+              break;
+            }
+            case 2: {
+              // todo calculate prefix
+              break;
+            }
+            case 3: {
+              cout << "\nResult: " << calculatePostfix(postfixExpr);
+              break;
+            }
+            default: {
+              cout << "\nYou entered an incorrect value\n";
+              break;
+            }
+          }
+          break;
+        }
         cout << "Write an expression:\n";
         cin.clear();
         cin.sync();
 
         switch (choiseType) {
           case 1: {
-            /* todo: calculate+validate infix */
+            getline(cin, infixExpr);
+            if (!checkExpr(infixExpr)) {
+              cout << "\nInvalid Input";
+              break;
+            }
+            postfixExpr = fromInfixToPostfix(infixExpr);
+            cout << "\nResult: " << calculatePostfix(postfixExpr);
             break;
           }
           case 2: {
