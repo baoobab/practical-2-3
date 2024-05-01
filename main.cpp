@@ -14,12 +14,12 @@ map<char, int> weight {
 };
 
 map<char, int> weightReversed { 
-    {'+', 4 },
-    {'-', 3 },
-    {'*', 2 },
-    {'/', 2 },
-    {'(', 0 },
-    {')', 1 }
+    {'+', 5 },
+    {'-', 4 },
+    {'*', 6  },
+    {'/', 7 },
+    {'(', 1 },
+    {')', 0 }
 };
 
 struct Stack {
@@ -183,6 +183,20 @@ string getNumberFromReverseString(string& expr, int& pos) {
   return output;
 }
 
+void reverseNumbersInString(string& inp) {
+  string output = "";
+  string number = "";
+  for (int i = 0; i < inp.length(); i++) {
+    if (isdigit(inp[i])) {
+      number = getNumberFromString(inp, i);
+      reverseString(number);
+      output += number;
+    } else {
+      output += inp[i];
+    }
+  }
+  inp = output;
+}
 
 string fromInfixToPostfix(string& infixExpr) {
   if (infixExpr.length() == 0) return "";
@@ -244,80 +258,99 @@ string fromInfixToPostfix(string& infixExpr) {
 
 string fromInfixToPrefix(string& infixExpr) {
   if (infixExpr.length() == 0) return "";
-  string output;
-  Stack* opStack = NULL; // стек операций
+  string output = fromInfixToPostfix(infixExpr);
+  reverseString(output);
+  reverseNumbersInString(output);
+  return output;
+}
 
-  for (int i = infixExpr.length() - 1; i >= 0; i--) {
-    char c = infixExpr[i];
+// string fromInfixToPrefix(string& infixExpr) {
+//   if (infixExpr.length() == 0) return "";
+//   string output;
+//   Stack* opStack = NULL; // стек операций
 
-    if (isdigit(c)) {
-      string number = getNumberFromReverseString(infixExpr, i);
-      output += number;
-      output += ' ';
-    } else if (c == '+' || c == '-' || c == '*' || c == '/') {
-      while ( (peek(opStack) != NULL ? weightReversed[peek(opStack)->data.letter] : -1) >= weightReversed[c] ) {
-        output += peek(opStack)->data.letter;
-        output += ' ';
-        pop(opStack);
-      }
-      addLetter(opStack, c);
-      // if ( length(opStack) == 0 || (weight[peek(opStack)->data.letter] < weight[c]) ) {
-      //   addLetter(opStack, c);
-      // }
-      // else {
-      //   while ( (peek(opStack) != NULL ? weight[peek(opStack)->data.letter] : -1) >= weight[c] ) {
-      //     output += peek(opStack)->data.letter;
-      //     output += ' ';
-      //     pop(opStack);
-      //   }
-      //   if ( length(opStack) == 0 || (weight[peek(opStack)->data.letter] < weight[c]) ) {
-      //     addLetter(opStack, c);
-      //   }
-      // }
-    } else if (c == '(') {
-      addLetter(opStack, c);
-    } else if (c == ')') {
-      while ( peek(opStack) != NULL && peek(opStack)->data.letter != '(' ) {
-        output += peek(opStack)->data.letter;
-        output += ' ';
-        pop(opStack);
-      } 
-      pop(opStack);
-    }
-  }
-  while (length(opStack) > 0) {
-    output += peek(opStack)->data.letter;
-    output += ' ';
-    pop(opStack);
-  }
+//   for (int i = infixExpr.length() - 1; i >= 0; i--) {
+//     char c = infixExpr[i];
+
+//     if (isdigit(c)) {
+//       string number = getNumberFromReverseString(infixExpr, i);
+//       output += number;
+//       output += ' ';
+//       cout << "\nFound number " << number << ", add it to the output line\n";
+//     } else if (c == '+' || c == '-' || c == '*' || c == '/') {
+//       cout << "\nFound an operation sign " << c << ", checking priority\n";
+//       if ( length(opStack) == 0 || (weightReversed[peek(opStack)->data.letter] < weightReversed[c]) ) {
+//         addLetter(opStack, c);
+//         cout << "\nCool cla$$, operation priority " << c << " > priority of top of the stack (or empty), add it to the operations stack\n";
+//       }
+//       else {
+//         cout << "\nThat's a do$ada, the priority of the operation " << c << " <= priority of top of the stack, pull out all operations to the lowest priority\n";
+//         while ( (peek(opStack) != NULL ? weightReversed[peek(opStack)->data.letter] : -1) >= weightReversed[c] ) {
+//           output += peek(opStack)->data.letter;
+//           output += ' ';
+//           cout << "\nAdded an operation sign from the stack " << peek(opStack)->data.letter << " to the output line\n";
+//           pop(opStack);
+//         }
+//         cout << "\nAnd consolidate success: priority " << c << " > priority of top of the stack (or empty), add it to the operations stack\n";
+//         if ( length(opStack) == 0 || (weightReversed[peek(opStack)->data.letter] < weightReversed[c]) ) {
+//           addLetter(opStack, c);
+//           cout << "\nAdded an operation sign " << c << " to the operations stack\n";
+//         }
+//       }
+//     } else if (c == ')') {
+//       addLetter(opStack, c);
+//       cout << "\nAdd open bracket to the operation stack\n";
+//     } else if (c == '(') {
+//       cout << "\nFound closed bracket, pull out all the operation signs from stack, until open bracket:\n";
+//       while ( peek(opStack) != NULL && peek(opStack)->data.letter != ')' ) {
+//         output += peek(opStack)->data.letter;
+//         output += ' ';
+//         cout << "\nAdded an operation sign from the stack " << peek(opStack)->data.letter << " to the output line\n";
+//         pop(opStack);
+//       }  
+//       cout << "\nRemove open bracket from the operation stack\n";
+//       pop(opStack);
+//     }
+//   }
+//   cout << "\nThe input line has ended, we throw all the remaining operation signs from the stack into the output line\n";
+//   while (length(opStack) > 0) {
+//     output += peek(opStack)->data.letter;
+//     output += ' ';
+//     cout << "\nAdded an operation sign from the stack " << peek(opStack)->data.letter << " to the output line\n";
+//     pop(opStack);
+//   }
+//   reverseString(output);
+//   reverseNumbersInString(output);
+//   return output;
+// }
+
+
+string fromPrefixToPostfix(string& prefixExpr) {
+  if (prefixExpr.length() == 0) return "";
+  string output = prefixExpr + "";
+
+  reverseString(output);
+  reverseNumbersInString(output);
   return output;
 }
 
 int calculatePostfix(string& postfixExpr) {
   if (postfixExpr.length() == 0) return 0;
-  Stack* stack = NULL;
-  int number = 0;
-  bool flag = true;
+  Stack* stack = NULL; // стек операндов
+  string number;
 
   for (int i = 0; i < postfixExpr.length(); i++) {
     char c = postfixExpr[i];
     if (isdigit(c)) {
-      number *= 10;
-      number += (c - '0');
-      flag = true;
-    } else {
-      if (c != ' ') {
-        int num2 = peek(stack)->data.digit;
-        pop(stack);
-        int num1 = peek(stack)->data.digit;
-        pop(stack);
+      number = getNumberFromString(postfixExpr, i);
+      addDigit(stack, stoi(number));
+    } else if (c == '+' || c == '-' || c == '*' || c == '/') {
+      int num2 = peek(stack)->data.digit;
+      pop(stack);
+      int num1 = peek(stack)->data.digit;
+      pop(stack);
 
-        addDigit(stack, calculateInfixOperation(c, num1, num2));
-        flag = false;
-      } else if (c == ' ' && flag) {
-        addDigit(stack, number);
-        number = 0;
-      }
+      addDigit(stack, calculateInfixOperation(c, num1, num2));
     }
   }
   return peek(stack)->data.digit;
@@ -391,6 +424,7 @@ int main() {
   string infixExpr;
   string postfixExpr;
   string prefixExpr;
+  string test;
 
   char actionType;
   short unsigned choiseType;
@@ -442,8 +476,8 @@ int main() {
         postfixExpr = fromInfixToPostfix(infixExpr);
         cout << "\nPostfix: " << postfixExpr << "\n";
         
-        // prefixExpr = fromInfixToPrefix(infixExpr);
-        // cout << "\nPrefix: " << prefixExpr << "\n";
+        prefixExpr = fromInfixToPrefix(infixExpr);
+        cout << "\nPrefix: " << prefixExpr << "\n";
 
         break;
       }
@@ -463,6 +497,7 @@ int main() {
             getline(cin, infixExpr);
             if (!checkExpr(infixExpr)) {
               cout << "\nInvalid Input";
+              infixExpr = "";
               break;
             }
             cout << "Cool";
@@ -472,6 +507,7 @@ int main() {
             getline(cin, prefixExpr);
             if (!checkExpr(prefixExpr)) {
               cout << "\nInvalid Input";
+              prefixExpr = "";
               break;
             }
             cout << "Cool";
@@ -481,6 +517,7 @@ int main() {
             getline(cin, postfixExpr);
             if (!checkExpr(postfixExpr)) {
               cout << "\nInvalid Input";
+              postfixExpr = "";
               break;
             }
             cout << "Cool";
@@ -511,7 +548,10 @@ int main() {
               break;
             }
             case 2: {
-              // todo calculate prefix
+              string fakePostfix = prefixExpr;
+              reverseString(fakePostfix);
+              reverseNumbersInString(fakePostfix);
+              cout << "\nResult: " << calculatePostfix(fakePostfix);
               break;
             }
             case 3: {
@@ -541,7 +581,15 @@ int main() {
             break;
           }
           case 2: {
-            /* todo: calculate+validate prefix */
+            getline(cin, prefixExpr);
+            if (!checkExpr(prefixExpr)) {
+              cout << "\nInvalid Input";
+              break;
+            }
+            string fakePostfix = prefixExpr + "";
+            reverseString(fakePostfix);
+            reverseNumbersInString(fakePostfix);
+            cout << "\nResult: " << calculatePostfix(fakePostfix);
             break;
           }
           case 3: {
