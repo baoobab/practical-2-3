@@ -1,6 +1,7 @@
 ﻿#include <iostream>
 #include <string>
 #include <map>
+#include <stack>
 #include <algorithm>
 using namespace std;
 
@@ -14,9 +15,9 @@ map<char, int> weight {
 };
 
 map<char, int> weightReversed { 
-    {'+', 5 },
+    {'+', 4 },
     {'-', 4 },
-    {'*', 6  },
+    {'*', 6 },
     {'/', 7 },
     {'(', 1 },
     {')', 0 }
@@ -132,6 +133,8 @@ void printStack(Stack* beg, bool isDigit) {
 
 
 int calculateInfixOperation(char op, int first, int second) {
+  if (!second) return first;
+  if (!first) return second;
   switch (op) {
     case '+':
       return first + second;
@@ -256,18 +259,74 @@ string fromInfixToPostfix(string& infixExpr) {
   return output;
 }
 
-string fromInfixToPrefix(string& infixExpr) {
-  if (infixExpr.length() == 0) return "";
-  string output = fromInfixToPostfix(infixExpr);
-  reverseString(output);
-  reverseNumbersInString(output);
-  return output;
+string fromPrefixToPostfix(string& prefixExpr) {
+  Stack* stack = NULL;
+  string postfix = "";
+  string temp;
+  string number;
+  
+  for (int i = prefixExpr.length() - 1; i >= 0; i--) {
+    char c = prefixExpr[i];
+    if (isdigit(c)) {
+      number = getNumberFromReverseString(prefixExpr, i);
+      addDigit(stack, stoi(number));
+    } else if (c == '+' || c == '-' || c == '*' || c == '/') {
+      string op1 = to_string(peek(stack)->data.digit);
+      if (op1 == "0") op1 = temp;
+      pop(stack);
+      string op2 = to_string(peek(stack)->data.digit);
+      if (op2 == "0") op2 = temp;
+      pop(stack);
+      temp = (op1 + " " + op2 + " " + c);
+      addDigit(stack, 0);
+    }
+  }
+
+  return temp;
 }
 
-string fromPrefixToPostfix(string& prefixExpr) {
-  if (prefixExpr.length() == 0) return "";
-  string output = prefixExpr + "";
+string fromInfixToPrefix(string& infixExpr) {
+  if (infixExpr.length() == 0) return "";
+  string output;
+  Stack* opStack = NULL; // стек операций
 
+  for (int i = infixExpr.length(); i >= 0; i--) {
+    char c = infixExpr[i];
+
+    if (isdigit(c)) {
+      string number = getNumberFromReverseString(infixExpr, i);
+      output += number;
+      output += ' ';
+    } else if (c == '+' || c == '-' || c == '*' || c == '/') {
+      if ( length(opStack) == 0 || (weightReversed[peek(opStack)->data.letter] < weightReversed[c]) ) {
+        addLetter(opStack, c);
+      }
+      else {
+        while ( (peek(opStack) != NULL ? weightReversed[peek(opStack)->data.letter] : -1) >= weightReversed[c] ) {
+          output += peek(opStack)->data.letter;
+          output += ' ';
+          pop(opStack);
+        }
+        if ( length(opStack) == 0 || (weightReversed[peek(opStack)->data.letter] < weightReversed[c]) ) {
+          addLetter(opStack, c);
+        }
+      }
+    } else if (c == ')') {
+      addLetter(opStack, c);
+    } else if (c == '(') {
+      while ( peek(opStack) != NULL && peek(opStack)->data.letter != ')' ) {
+        output += peek(opStack)->data.letter;
+        output += ' ';
+        pop(opStack);
+      }  
+      pop(opStack);
+    }
+  }
+  while (length(opStack) > 0) {
+    output += peek(opStack)->data.letter;
+    output += ' ';
+    pop(opStack);
+  }
   reverseString(output);
   reverseNumbersInString(output);
   return output;
@@ -284,15 +343,21 @@ int calculatePostfix(string& postfixExpr) {
       number = getNumberFromString(postfixExpr, i);
       addDigit(stack, stoi(number));
     } else if (c == '+' || c == '-' || c == '*' || c == '/') {
-      int num2 = peek(stack)->data.digit;
+      int num2 = peek(stack) ? peek(stack)->data.digit : 0;
       pop(stack);
-      int num1 = peek(stack)->data.digit;
+      int num1 = peek(stack) ? peek(stack)->data.digit : 0;
       pop(stack);
 
       addDigit(stack, calculateInfixOperation(c, num1, num2));
     }
   }
   return peek(stack)->data.digit;
+}
+
+int calculatePrefix(string& prefixExpr) {
+  if (prefixExpr.length() == 0) return 0;
+  string postfixExpr = fromPrefixToPostfix(prefixExpr);
+  return calculatePostfix(postfixExpr);
 }
 
 int countOperators(const string& expr) {
@@ -363,7 +428,6 @@ int main() {
   string infixExpr;
   string postfixExpr;
   string prefixExpr;
-  string test;
 
   char actionType;
   short unsigned choiseType;
@@ -416,6 +480,9 @@ int main() {
         
         prefixExpr = fromInfixToPrefix(infixExpr);
         cout << "\nPrefix: " << prefixExpr << "\n";
+        
+        string test = fromPrefixToPostfix(prefixExpr);
+        cout << "\nallax: " << test << "\n";
 
         break;
       }
@@ -486,10 +553,7 @@ int main() {
               break;
             }
             case 2: {
-              string fakePostfix = prefixExpr;
-              reverseString(fakePostfix);
-              reverseNumbersInString(fakePostfix);
-              cout << "\nResult: " << calculatePostfix(fakePostfix);
+              cout << "\nResult: " << calculatePrefix(prefixExpr);
               break;
             }
             case 3: {
@@ -524,10 +588,7 @@ int main() {
               cout << "\nInvalid Input";
               break;
             }
-            string fakePostfix = prefixExpr + "";
-            reverseString(fakePostfix);
-            reverseNumbersInString(fakePostfix);
-            cout << "\nResult: " << calculatePostfix(fakePostfix);
+            cout << "\nResult: " << calculatePrefix(prefixExpr);
             break;
           }
           case 3: {
