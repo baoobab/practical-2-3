@@ -1,7 +1,6 @@
 ﻿#include <iostream>
 #include <string>
 #include <map>
-#include <stack>
 #include <algorithm>
 using namespace std;
 
@@ -271,17 +270,17 @@ string fromPrefixToPostfix(string& prefixExpr) {
       number = getNumberFromReverseString(prefixExpr, i);
       addDigit(stack, stoi(number));
     } else if (c == '+' || c == '-' || c == '*' || c == '/') {
-      string op1 = to_string(peek(stack)->data.digit);
+      string op1 = peek(stack) ? to_string(peek(stack)->data.digit) : "";
       if (op1 == "0") op1 = temp;
       pop(stack);
-      string op2 = to_string(peek(stack)->data.digit);
+      string op2 = peek(stack) ? to_string(peek(stack)->data.digit) : "";
       if (op2 == "0") op2 = temp;
       pop(stack);
       temp = (op1 + " " + op2 + " " + c);
+
       addDigit(stack, 0);
     }
   }
-
   return temp;
 }
 
@@ -480,9 +479,6 @@ int main() {
         
         prefixExpr = fromInfixToPrefix(infixExpr);
         cout << "\nPrefix: " << prefixExpr << "\n";
-        
-        string test = fromPrefixToPostfix(prefixExpr);
-        cout << "\nallax: " << test << "\n";
 
         break;
       }
